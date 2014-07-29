@@ -34,13 +34,6 @@ $parser->addArgument('scrappers', array(
     'choices' => array_keys($scrappers)
 ));
 
-$parser->addOption('delete_dir', array(
-    'short_name' => '-d',
-    'long_name' => '--delete_dir',
-    'action' => 'StoreTrue',
-    'description' => 'delete "data_dir" before scrap'
-));
-
 try {
     $result = $parser->parse();
 
@@ -50,9 +43,6 @@ try {
         }
         $scrapper = $scrappers[$scrapperName];
         echo 'Crawler "', $scrapper->getName(), "\"\n";
-
-        if ($parser->options['delete_dir'])
-            $scrapper->setOption('delete_dir', true);
 
         try {
             $scrapper->scrap();
@@ -78,12 +68,9 @@ abstract class Scrapper
      */
     const OPT_PAGES_DIR = 'pages_dir';
     
-    const OPT_DIR_DELETE = 'delete_dir';
-    
     protected $default_options = array(
         self::OPT_PAGES_DIR => '',
-        self::OPT_DATA_DIR => './data',
-        self::OPT_DIR_DELETE => false
+        self::OPT_DATA_DIR => './data'
     );
     
     protected $options;
@@ -124,13 +111,10 @@ abstract class Scrapper
     public function scrap()
     {
         $data_dir = $this->options[self::OPT_DATA_DIR];
-        if (file_exists($data_dir)) {
-            if (! $this->options[self::OPT_DIR_DELETE])
-                throw new Exception('Folder already exists "' . $data_dir . '"');
-            Util::delTree($data_dir);
+        if (! file_exists($data_dir)) {
+            mkdir($data_dir, 0777, true);
         }
-        mkdir($data_dir, 0777, true);
-    
+
         $this->_scrap();
     
         $this->log('pages_read='.$this->pages_read);
