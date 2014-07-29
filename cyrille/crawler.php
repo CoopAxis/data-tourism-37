@@ -56,21 +56,21 @@ $parser->addOption('itemsBetweenSleep', array(
 ));
 
 try {
-    $result = $parser->parse();
+    $parserResult = $parser->parse();
     
-    foreach ($result->args['crawlers'] as $crawlerName) {
+    foreach ($parserResult->args['crawlers'] as $crawlerName) {
         if (! isset($crawlers[$crawlerName])) {
             throw new Exception('Unknow crawler "' . $crawlerName . '"');
         }
         $crawler = $crawlers[$crawlerName];
         echo 'Crawler "', $crawler->getName(), "\"\n";
-        
-        if ($parser->options['delete_dir'])
+
+        if ($parserResult->options['delete_dir'])
             $crawler->setOption('delete_dir', true);
-        if ($parser->options['sleep'])
-            $crawler->setOption('sleep', true);
-        if ($parser->options['itemsBetweenSleep'])
-            $crawler->setOption('itemsBetweenSleep', true);
+        if ($parserResult->options['sleep'])
+            $crawler->setOption('sleep', $parserResult->options['sleep']);
+        if ($parserResult->options['itemsBetweenSleep'])
+            $crawler->setOption('itemsBetweenSleep', $parserResult->options['itemsBetweenSleep']);
         
         try {
             $crawler->crawl();
@@ -159,7 +159,7 @@ abstract class Crawler
     protected function onPageRead()
     {
         $this->pages_read ++;
-        if ($this->pages_read > 0 && ($this->pages_read % $this->options[self::OPT_ITEMSBETWEENSLEEP] == 0)) {
+        if ($this->pages_read > 0 && (($this->pages_read % $this->options[self::OPT_ITEMSBETWEENSLEEP]) == 0)) {
             $this->log('Read ', $this->pages_read, ' pages, sleeping...');
             usleep($this->options[self::OPT_SLEEP]);
         }
