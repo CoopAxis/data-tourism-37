@@ -35,7 +35,7 @@ class TouraineloirevalleyActivites extends Scrapper
         $filename = $this->options[self::OPT_DATA_DIR].DIRECTORY_SEPARATOR.$this->getName().'.csv' ;
         $csv = fopen($filename, 'w');
 
-        $headers=array('nom','lat','lon','adr1','adr2','adr3','adr4','tel','mail','web', 'intro', 'langues_nbr', 'langues', 'visite', 'activites_nbr', 'activites', 'services_nbr', 'services', 'url');
+        $headers=array('nom','lat','lon','adr1','adr2','adr3','adr4','tel','mail','web', 'intro', 'description', 'langues_nbr', 'langues', 'visite', 'activites_nbr', 'activites', 'services_nbr', 'services', 'url');
         fputcsv($csv, $headers, ',','"');
 
         foreach( $activites as $h )
@@ -49,6 +49,7 @@ class TouraineloirevalleyActivites extends Scrapper
             $r[] = isset($h['mail']) ? $h['mail'] : '' ;
             $r[] = isset($h['web']) ? $h['web'] : '' ;
             $r[] = isset($h['intro']) ? $h['intro'] : '' ;
+            $r[] = isset($h['description']) ? implode( "\n",$h['description']) : '' ;
             $r[] = isset($h['langues']) ? count($h['langues']) : 0 ;
             $r[] = isset($h['langues']) ?  implode( "\n",$h['langues']) : ''; 
             $r[] = $h['visite']===true ? 'oui' : '' ;
@@ -141,7 +142,9 @@ class TouraineloirevalleyActivites extends Scrapper
             $h['intro'] = (string) $nodes[0]->children()->asXML();
         }
 
-        $nodes = $doc->xpath('//h2');
+        $nodes_block_offre_detail = $doc->xpath('//div[contains(concat(" ", @class, " "), " block ") and contains(concat(" ", @class, " "), " offre_detail ")]');
+        
+        $nodes = $nodes_block_offre_detail[0]->xpath('//h2');
         foreach( $nodes as $node )
         {
             switch ( (string)$node )
@@ -160,7 +163,7 @@ class TouraineloirevalleyActivites extends Scrapper
             	    $h['activites_nbr'] = count($activites);
             	    $h['activites'] = $activites;
             	    break;
-        
+
             	case 'Services':
             	    $services = array();
             	    $n2s = $node->xpath('following-sibling::div[1]/ul/li');
@@ -170,6 +173,21 @@ class TouraineloirevalleyActivites extends Scrapper
             	    }
             	    $h['services_nbr'] = count($services);
             	    $h['services'] = $services;
+            	    break;
+            	    
+            	case 'Description':
+            	    $description = array();
+            	    $n2s = $node->xpath('following-sibling::ul[1]/li');
+            	    foreach( $n2s as $n2 )
+            	    {
+            	        $s = '' ;
+            	        foreach( $n2->children() as $n3 )
+            	           $s.= (string) $n3 ;
+            	        $s.= (string) $n2 ;
+            	        $s = str_replace("\n", ' ', $s);
+            	        $description[] = $s ;
+            	    }
+            	    $h['description'] = $description ;
             	    break;
             }
         }
