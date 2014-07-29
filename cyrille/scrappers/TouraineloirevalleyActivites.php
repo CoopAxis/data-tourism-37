@@ -35,7 +35,7 @@ class TouraineloirevalleyActivites extends Scrapper
         $filename = $this->options[self::OPT_DATA_DIR].DIRECTORY_SEPARATOR.$this->getName().'.csv' ;
         $csv = fopen($filename, 'w');
 
-        $headers=array('nom','lat','lon','adr1','adr2','adr3','adr4','tel','mail','web', 'intro', 'visite', 'activites_nbr', 'activites', 'services_nbr', 'services', 'url');
+        $headers=array('nom','lat','lon','adr1','adr2','adr3','adr4','tel','mail','web', 'intro', 'langues_nbr', 'langues', 'visite', 'activites_nbr', 'activites', 'services_nbr', 'services', 'url');
         fputcsv($csv, $headers, ',','"');
 
         foreach( $activites as $h )
@@ -48,7 +48,9 @@ class TouraineloirevalleyActivites extends Scrapper
             $r[] = isset($h['tel']) ? $h['tel'] : '' ;
             $r[] = isset($h['mail']) ? $h['mail'] : '' ;
             $r[] = isset($h['web']) ? $h['web'] : '' ;
-            $r[] = isset($h['intro']) ? $h['intro'] : '' ; 
+            $r[] = isset($h['intro']) ? $h['intro'] : '' ;
+            $r[] = isset($h['langues']) ? count($h['langues']) : 0 ;
+            $r[] = isset($h['langues']) ?  implode( "\n",$h['langues']) : ''; 
             $r[] = $h['visite']===true ? 'oui' : '' ;
             $r[] = count($h['activites']);
             $r[] = count($h['activites'])>0 ? implode( "\n", $h['activites']) : '' ;
@@ -123,8 +125,16 @@ class TouraineloirevalleyActivites extends Scrapper
             }
         }
 
-        //$nodes = $nodes_block_offre[0]->xpath('//ul[contains(concat(" ", @class, " "), " langues ")]/li');
-        
+        $nodes = $nodes_block_offre[0]->xpath('//ul[contains(concat(" ", @class, " "), " langues ")]/li/img');
+        if( $nodes != null )
+        {
+            $h['langues'] = array();
+            foreach( $nodes as $img )
+            {
+                $h['langues'][] = (string) $img['title'] ;
+            }
+        }
+
         $nodes = $nodes_block_offre[0]->xpath('//div[contains(concat(" ", @class, " "), " intro ")]');
         if( $nodes != null )
         {
