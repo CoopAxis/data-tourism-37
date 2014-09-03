@@ -3,4 +3,4 @@ cyrille/tmp.pages
 
 # common stuff
 *~
-
+*.~lock*
